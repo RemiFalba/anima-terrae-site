@@ -17,7 +17,7 @@ app.post('/send_email.php', async (req, res) => {
   }
 
   const transporter = nodemailer.createTransport({
-    host: 'smtp.hostinger.com',
+    host: 'smtp.gmail.com',
     port: 465,
     secure: true,
     auth: {
