@@ -2056,7 +2056,7 @@ function Contact() {
     e.preventDefault();
     setStatus('sending');
     try {
-      const res = await fetch('https://formspree.io/f/xoqgjvov', {
+      const res = await fetch('/send_email.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify(fields),
@@ -2155,8 +2155,7 @@ function Contact() {
                   Racontez-moi <em style={{ color: 'rgba(255,255,255,0.60)' }}>votre projet.</em>
                 </h2>
 
-                {/* Formspree endpoint → remplacer xoqgjvov */}
-                <form onSubmit={onSubmit} action="https://formspree.io/f/xoqgjvov" method="POST"
+                <form onSubmit={onSubmit} action="/send_email.php" method="POST"
                   style={{ textAlign: 'left' }}
                 >
                   {/* Ligne Nom + Email */}
