@@ -28,7 +28,7 @@ app.post('/send_email.php', async (req, res) => {
 
   try {
     await transporter.sendMail({
-      from: `"ANIMA TERRAE" <${process.env.SMTP_USER}>`,
+      from: `"ANIMA TERRAE" <falbaremi09@gmail.com>`,
       to: 'remi@animaterrae.fr',
       replyTo: email,
       subject: objet
