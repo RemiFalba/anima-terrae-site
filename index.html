@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANIMA TERRAE — Rémi Falba, Réalisateur de Récits Vivants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&family=Montserrat:wght@400;700;800;900&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+  <script src="https://unpkg.com/framer-motion@10.18.0/dist/framer-motion.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --fog:    oklch(94% 0.006 200);
+      --ink:    oklch(14% 0.008 240);
+      --dust:   oklch(78% 0.008 220);
+      --mist:   oklch(60% 0.010 220);
+      --lichen: oklch(58% 0.12 160);
+      --rule:   oklch(84% 0.007 210);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--fog);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── Grain overlay ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── Hero background ── */
+    .hero-bg {
+      position: absolute;
+      inset: -5%;
+      background: linear-gradient(150deg, #050e08 0%, #0c2014 35%, #091a18 65%, #0a120e 100%);
+      will-change: transform;
+    }
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 55% at 72% 38%, rgba(61,140,106,0.14) 0%, transparent 68%),
+        radial-gradient(ellipse 45% 40% at 18% 72%, rgba(25,70,50,0.1) 0%, transparent 60%);
+      animation: atmosPulse 9s ease-in-out infinite alternate;
+    }
+    @keyframes atmosPulse {
+      from { opacity: 0.55; }
+      to   { opacity: 1; }
+    }
+
+    /* ── Hero overlay ── */
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to right,
+        rgba(5,14,8,0.82) 0%,
+        rgba(5,14,8,0.65) 58%,
+        rgba(5,14,8,0.15) 100%
+      );
+    }
+
+    /* ── Left blurred panel ── */
+    .hero-panel {
+      position: relative;
+      z-index: 10;
+      width: 50%;
+      height: 100%;
+      background: rgba(4, 10, 6, 0.28);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-right: 1px solid rgba(61,140,106,0.14);
+      padding: 60px 60px 88px 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* ── Vertical text ── */
+    .vertical-text {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%) rotate(-90deg);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 10px;
+      letter-spacing: 0.52em;
+      color: rgba(255,255,255,0.22);
+      text-transform: uppercase;
+      white-space: nowrap;
+      z-index: 20;
+    }
+
+    /* ── CTA button ── */
+    .cta-btn {
+      display: inline-block;
+      padding: 20px 52px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.32em;
+      color: white;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      background:
+        repeating-linear-gradient(
+          45deg,
+          transparent, transparent 2px,
+          rgba(255,255,255,0.025) 2px, rgba(255,255,255,0.025) 4px
+        ),
+        linear-gradient(135deg, oklch(56% 0.13 162) 0%, oklch(44% 0.11 170) 100%);
+      transition: transform 0.28s ease, box-shadow 0.28s ease;
+    }
+    .cta-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(255,255,255,0.12) 0%, transparent 55%);
+      opacity: 0;
+      transition: opacity 0.28s;
+    }
+    .cta-btn:hover::before { opacity: 1; }
+    .cta-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 40px rgba(61,140,106,0.45);
+    }
+
+    /* ── Clients slider ── */
+    .clients-track {
+      display: flex;
+      width: max-content;
+      align-items: center;
+      gap: 72px;
+      padding: 0 36px;
+      animation: marquee 28s linear infinite;
+    }
+    .clients-track:hover { animation-play-state: paused; }
+
+    @keyframes marquee {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .client-logo {
+      height: 56px;
+      width: auto;
+      max-width: 140px;
+      object-fit: contain;
+      opacity: 0.82;
+      flex-shrink: 0;
+      display: block;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .client-logo:hover {
+      opacity: 1;
+      transform: scale(1.06);
+    }
+
+    /* Progressive blur masks (left & right) */
+    .blur-left,
+    .blur-right {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 140px;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .blur-left  { left:  0; background: linear-gradient(to right, rgba(4,10,6,0.72) 0%, transparent 100%); }
+    .blur-right { right: 0; background: linear-gradient(to left,  rgba(4,10,6,0.72) 0%, transparent 100%); }
+
+    /* ── About ── */
+    .about-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+
+    /* ── Portfolio ── */
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+    }
+    @media (max-width: 640px) {
+      .portfolio-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .hero-panel { width: 100%; backdrop-filter: blur(14px); padding: 60px 28px 64px; }
+      .vertical-text { display: none; }
+      .about-cols { grid-template-columns: 1fr !important; }
+      h1 { font-size: 52px !important; }
+    }
+    @media (max-width: 700px) {
+      section[style*="LIV_2989"] { background-attachment: scroll !important; padding: 48px 24px; }
+    }
+
+    /* ── Contact form ── */
+    .contact-label {
+      display: block;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 8px; letter-spacing: 0.26em; text-transform: uppercase;
+      color: rgba(255,255,255,0.40);
+      margin-bottom: 7px;
+    }
+    .contact-input {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 6px;
+      padding: 12px 16px;
+      color: #ffffff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      outline: none;
+      transition: border-color 0.22s ease, background 0.22s ease;
+      box-sizing: border-box;
+      resize: none;
+    }
+    .contact-input::placeholder { color: rgba(255,255,255,0.22); }
+    .contact-input:focus {
+      border-color: oklch(58% 0.12 160);
+      background: rgba(255,255,255,0.09);
+    }
+
+    /* ── Stratégie ── */
+    .strategie-trail { display: block; }
+    .strategie-connector { display: flex; animation: strategie-pulse 2.6s ease-in-out infinite; }
+    .strategie-connector-inactive { display: flex; }
+    @keyframes strategie-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(88,155,120,0.55); }
+      55%       { box-shadow: 0 0 0 8px rgba(88,155,120,0); }
+    }
+    @media (max-width: 860px) {
+      .strategie-trail { display: none !important; }
+      .strategie-connector { display: none !important; animation: none !important; }
+      .strategie-step { justify-content: center !important; margin-left: 0 !important; }
+      .strategie-card { width: 92% !important; }
+    }
+
+    /* ── Image Trail ── */
+    @keyframes trailIn {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.72) rotate(var(--trail-rot, 0deg)); }
+      18%  { opacity: 1; transform: translate(-50%, -50%) scale(1.02) rotate(var(--trail-rot, 0deg)); }
+      70%  { opacity: 1; transform: translate(-50%, -50%) scale(1)    rotate(var(--trail-rot, 0deg)); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.88) rotate(var(--trail-rot, 0deg)); }
+    }
+    .trail-item {
+      animation: trailIn 0.85s ease forwards;
+      pointer-events: none;
+      position: absolute;
+    }
+    .trail-cta {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      letter-spacing: -0.02em;
+      text-align: center;
+      transition: color 0.35s ease, transform 0.35s ease;
+    }
+    .trail-cta:hover { color: var(--lichen); transform: scale(1.04); }
+
+    /* ── CTA contact (section clôture) ── */
+    .cta-contact {
+      display: inline-block;
+      padding: 22px 58px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.34em;
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, oklch(58% 0.14 162) 0%, oklch(46% 0.12 168) 100%);
+      /* Halo permanent discret — attire l'œil sans rivaliser avec la branche */
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.12),
+        0 0 28px rgba(61,140,106,0.28),
+        0 8px 32px rgba(0,0,0,0.50);
+      transition: transform 0.30s cubic-bezier(0.22,1,0.36,1), box-shadow 0.30s ease;
+    }
+    /* Reflet interne : donne du relief, accentue la lisibilité */
+    .cta-contact::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg,
+        rgba(255,255,255,0.18) 0%,
+        rgba(255,255,255,0.06) 40%,
+        transparent 70%);
+      pointer-events: none;
+    }
+    /* Shimmer au survol */
+    .cta-contact::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.28s;
+    }
+    .cta-contact:hover::after { opacity: 1; }
+    .cta-contact:hover {
+      transform: translateY(-4px) scale(1.03);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.18),
+        0 0 52px rgba(61,140,106,0.52),
+        0 18px 52px rgba(61,140,106,0.28),
+        0 4px 16px rgba(0,0,0,0.40);
+    }
+    .cta-contact:active {
+      transform: translateY(-1px) scale(1.01);
+    }
+
+    /* ── CTA audit ── */
+    .cta-audit {
+      display: inline-block;
+      padding: 22px 64px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.32em;
+      color: white;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      background:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.025) 2px, rgba(255,255,255,0.025) 4px),
+        linear-gradient(135deg, oklch(56% 0.13 162) 0%, oklch(44% 0.11 170) 100%);
+      transition: transform 0.28s ease, box-shadow 0.28s ease;
+    }
+    .cta-audit::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(255,255,255,0.12) 0%, transparent 55%);
+      opacity: 0;
+      transition: opacity 0.28s;
+    }
+    .cta-audit:hover::before { opacity: 1; }
+    .cta-audit:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 56px rgba(61,140,106,0.5);
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const { useState, useEffect, useRef } = React;
+const gsap = window.gsap;
+
+/* Framer Motion via UMD global */
+const FM = window.Motion || window.FramerMotion || {};
+const _motion    = FM.motion    || {};
+const _AnimPres  = FM.AnimatePresence;
+const fmUseMotionValue = FM.useMotionValue || (() => ({ set() {}, get() { return 180; } }));
+const fmAnimate = FM.animate || null;
+
+/* Minimal fallback if FM didn't load: forward all props minus motion-specific ones */
+const STRIP = new Set(['initial','animate','whileInView','exit','transition','viewport','variants','whileHover','whileTap']);
+function mkFallback(tag) {
+  return React.forwardRef(({ children, ...props }, ref) => {
+    const clean = Object.fromEntries(Object.entries(props).filter(([k]) => !STRIP.has(k)));
+    return React.createElement(tag, { ...clean, ref }, children);
+  });
+}
+const motion = new Proxy(_motion, {
+  get(target, tag) { return target[tag] || mkFallback(tag); }
+});
+
+
+/* ══════════════════════════ PERLIN NOISE (no external dep) ══ */
+function createNoise2D() {
+  const GRAD = [1,1,-1,1,1,-1,-1,-1,1,0,-1,0,0,1,0,-1];
+  const seed  = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) seed[i] = i;
+  for (let i = 255; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = seed[i]; seed[i] = seed[j]; seed[j] = t;
+  }
+  const perm = new Uint8Array(512);
+  const gx   = new Float32Array(512);
+  const gy   = new Float32Array(512);
+  for (let i = 0; i < 512; i++) {
+    perm[i] = seed[i & 255];
+    const g = (perm[i] % 8) * 2;
+    gx[i] = GRAD[g]; gy[i] = GRAD[g + 1];
+  }
+  const fade = t => t * t * t * (t * (t * 6 - 15) + 10);
+  const lerp  = (a, b, t) => a + t * (b - a);
+  return (x, y) => {
+    const X = Math.floor(x) & 255, Y = Math.floor(y) & 255;
+    const xf = x - Math.floor(x), yf = y - Math.floor(y);
+    const u = fade(xf), v = fade(yf);
+    const a = perm[X] + Y, b = perm[X + 1] + Y;
+    return lerp(
+      lerp(gx[a]*xf + gy[a]*yf,         gx[b]*(xf-1)   + gy[b]*yf,         u),
+      lerp(gx[a+1]*xf + gy[a+1]*(yf-1), gx[b+1]*(xf-1) + gy[b+1]*(yf-1), u),
+      v
+    );
+  };
+}
+
+/* ══════════════════════════════════════ WAVES ══ */
+function Waves({ strokeColor = 'rgba(255,255,255,0.18)', backgroundColor = 'oklch(58% 0.12 160)', pointerSize = 0.8 }) {
+  const containerRef = useRef(null);
+  const svgRef       = useRef(null);
+  const stateRef     = useRef({
+    mouse:  { x: -10, y: 0, lx: 0, ly: 0, sx: 0, sy: 0, v: 0, vs: 0, a: 0, set: false },
+    paths:  [], lines: [], noise: null, raf: null, bounding: null,
+  });
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const svg       = svgRef.current;
+    if (!container || !svg) return;
+    const s = stateRef.current;
+    s.noise = createNoise2D();
+
+    const setSize = () => {
+      s.bounding = container.getBoundingClientRect();
+      svg.style.width  = `${s.bounding.width}px`;
+      svg.style.height = `${s.bounding.height}px`;
+    };
+
+    const setLines = () => {
+      if (!s.bounding) return;
+      const { width, height } = s.bounding;
+      s.lines = []; s.paths.forEach(p => p.remove()); s.paths = [];
+      const xGap = 12, yGap = 10;
+      const totalLines  = Math.ceil((width  + 200) / xGap);
+      const totalPoints = Math.ceil((height +  30) / yGap);
+      const xStart = (width  - xGap * totalLines)  / 2;
+      const yStart = (height - yGap * totalPoints) / 2;
+      for (let i = 0; i < totalLines; i++) {
+        const pts = [];
+        for (let j = 0; j < totalPoints; j++) {
+          pts.push({ x: xStart + xGap * i, y: yStart + yGap * j,
+                     wave: { x: 0, y: 0 }, cursor: { x: 0, y: 0, vx: 0, vy: 0 } });
+        }
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', strokeColor);
+        path.setAttribute('stroke-width', '1');
+        svg.appendChild(path);
+        s.paths.push(path); s.lines.push(pts);
+      }
+    };
+
+    const updateMouse = (x, y) => {
+      if (!s.bounding) return;
+      const m = s.mouse;
+      m.x = x - s.bounding.left;
+      m.y = y - s.bounding.top + window.scrollY;
+      if (!m.set) { m.sx = m.x; m.sy = m.y; m.lx = m.x; m.ly = m.y; m.set = true; }
+      container.style.setProperty('--mx', `${m.sx}px`);
+      container.style.setProperty('--my', `${m.sy}px`);
+    };
+
+    const onMouseMove = e => updateMouse(e.pageX, e.pageY);
+    const onTouch     = e => { e.preventDefault(); updateMouse(e.touches[0].clientX, e.touches[0].clientY); };
+    const onResize    = () => { setSize(); setLines(); };
+
+    const movePoints = time => {
+      const m = s.mouse;
+      s.lines.forEach(pts => pts.forEach(p => {
+        const mv = s.noise((p.x + time * 0.008) * 0.003, (p.y + time * 0.003) * 0.002) * 8;
+        p.wave.x = Math.cos(mv) * 12; p.wave.y = Math.sin(mv) * 6;
+        const dx = p.x - m.sx, dy = p.y - m.sy;
+        const d  = Math.hypot(dx, dy), l = Math.max(175, m.vs);
+        if (d < l) {
+          const f = Math.cos(d * 0.001) * (1 - d / l);
+          p.cursor.vx += Math.cos(m.a) * f * l * m.vs * 0.00035;
+          p.cursor.vy += Math.sin(m.a) * f * l * m.vs * 0.00035;
+        }
+        p.cursor.vx += (0 - p.cursor.x) * 0.01; p.cursor.vy += (0 - p.cursor.y) * 0.01;
+        p.cursor.vx *= 0.95; p.cursor.vy *= 0.95;
+        p.cursor.x  += p.cursor.vx; p.cursor.y  += p.cursor.vy;
+        p.cursor.x = Math.min(50, Math.max(-50, p.cursor.x));
+        p.cursor.y = Math.min(50, Math.max(-50, p.cursor.y));
+      }));
+    };
+
+    const pt = (p, cur = true) => ({
+      x: p.x + p.wave.x + (cur ? p.cursor.x : 0),
+      y: p.y + p.wave.y + (cur ? p.cursor.y : 0),
+    });
+
+    const drawLines = () => {
+      s.lines.forEach((pts, li) => {
+        if (pts.length < 2 || !s.paths[li]) return;
+        const f = pt(pts[0], false);
+        let d = `M ${f.x} ${f.y}`;
+        for (let i = 1; i < pts.length; i++) { const c = pt(pts[i]); d += `L ${c.x} ${c.y}`; }
+        s.paths[li].setAttribute('d', d);
+      });
+    };
+
+    const tick = time => {
+      const m = s.mouse;
+      m.sx += (m.x - m.sx) * 0.1; m.sy += (m.y - m.sy) * 0.1;
+      const dx = m.x - m.lx, dy = m.y - m.ly;
+      m.v = Math.hypot(dx, dy);
+      m.vs += (m.v - m.vs) * 0.1; m.vs = Math.min(100, m.vs);
+      m.lx = m.x; m.ly = m.y; m.a = Math.atan2(dy, dx);
+      container.style.setProperty('--mx', `${m.sx}px`);
+      container.style.setProperty('--my', `${m.sy}px`);
+      movePoints(time); drawLines();
+      s.raf = requestAnimationFrame(tick);
+    };
+
+    setSize(); setLines();
+    window.addEventListener('resize', onResize);
+    window.addEventListener('mousemove', onMouseMove);
+    container.addEventListener('touchmove', onTouch, { passive: false });
+    s.raf = requestAnimationFrame(tick);
+
+    return () => {
+      if (s.raf) cancelAnimationFrame(s.raf);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('mousemove', onMouseMove);
+      container.removeEventListener('touchmove', onTouch);
+    };
+  }, []);
+
+  return (
+    <div ref={containerRef} style={{
+      backgroundColor,
+      position: 'absolute', top: 0, left: 0,
+      width: '100%', height: '100%', overflow: 'hidden',
+    }}>
+      <svg ref={svgRef} xmlns="http://www.w3.org/2000/svg"
+           style={{ display: 'block', width: '100%', height: '100%' }} />
+      <div style={{
+        position: 'absolute', top: 0, left: 0,
+        width: `${pointerSize}rem`, height: `${pointerSize}rem`,
+        background: strokeColor, borderRadius: '50%',
+        transform: 'translate3d(calc(var(--mx, -10px) - 50%), calc(var(--my, 50%) - 50%), 0)',
+        willChange: 'transform',
+      }} />
+    </div>
+  );
+}
+
+
+/* ═══════════════════════════════════════ NAV ═══ */
+function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', fn);
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
+
+  return (
+    <nav style={{
+      position: 'fixed', top: 0, width: '100%', zIndex: 200,
+      padding: '22px 64px',
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      background: scrolled ? 'rgba(5,14,8,0.88)' : 'transparent',
+      backdropFilter: scrolled ? 'blur(18px)' : 'none',
+      WebkitBackdropFilter: scrolled ? 'blur(18px)' : 'none',
+      borderBottom: scrolled ? '1px solid rgba(61,140,106,0.16)' : 'none',
+      transition: 'background 0.4s ease, border-color 0.4s ease'
+    }}>
+      <a href="#hero" style={{ textDecoration: 'none' }}>
+        <div style={{
+          fontFamily: "'Montserrat', sans-serif",
+          fontWeight: 900,
+          fontSize: '28px',
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: 'white',
+          lineHeight: 1
+        }}>Anima Terrae</div>
+        <div style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '8px',
+          letterSpacing: '0.28em',
+          color: 'oklch(68% 0.14 160)',
+          textTransform: 'uppercase',
+          marginTop: '4px'
+        }}>Rémi Falba · Production</div>
+      </a>
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        {[
+          { label: 'À propos',    href: '#apropos'      },
+          { label: 'Réalisations', href: '#realisations' },
+          { label: 'Stratégie',   href: '#offre'        },
+          { label: 'Contact',     href: '#contact'      },
+        ].map(({ label, href }) => (
+          <a key={label} href={href} style={{
+            padding: '7px 18px',
+            fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.16em',
+            color: 'rgba(255,255,255,0.78)',
+            fontFamily: "'DM Sans', sans-serif", fontWeight: 400,
+            textDecoration: 'none',
+            border: '1px solid rgba(255,255,255,0.22)',
+            background: 'rgba(255,255,255,0.07)',
+            backdropFilter: 'blur(14px)',
+            WebkitBackdropFilter: 'blur(14px)',
+            borderRadius: '2px',
+            transition: 'background 0.25s ease, color 0.25s ease, border-color 0.25s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+            e.currentTarget.style.color = 'white';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.42)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+            e.currentTarget.style.color = 'rgba(255,255,255,0.78)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)';
+          }}
+          >{label}</a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+
+/* ═══════════════════════════════════════ HERO ══ */
+function Hero() {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const fn = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', fn, { passive: true });
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
+
+  /* zoom progressif au scroll */
+  const bgScale = 1 + scrollY * 0.00045;
+  /* fondu du panel texte au scroll */
+  const panelOpacity = Math.max(0, 1 - scrollY / 480);
+
+  return (
+    <section id="hero" style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
+
+      {/* ── Background cinématique ── */}
+      <div
+        className="hero-bg"
+        style={{ transform: `scale(${bgScale})`, transition: 'transform 0.08s linear' }}
+      >
+        {/*
+          Remplacez le src ci-dessous par votre showreel :
+          <source src="showreel.mp4" type="video/mp4" />
+        */}
+        <video
+          autoPlay muted loop playsInline
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover', opacity: 0.9,
+            filter: 'brightness(0.75) saturate(0.85)'
+          }}
+        >
+          <source src="https://www.dropbox.com/scl/fi/lvbfq3e1ipepiuogsocqs/Video_site_V2.mp4?rlkey=7dmz780wr63mt3utz3bw2lv7v&st=a7litytu&raw=1" type="video/mp4" />
+        </video>
+      </div>
+
+      {/* ── Dégradé sombre ── */}
+      <div className="hero-overlay" />
+
+      {/* ── Panneau gauche semi-transparent ── */}
+      <div className="hero-panel" style={{ opacity: panelOpacity }}>
+
+        {/* Eyebrow */}
+        <div style={{ marginBottom: '24px' }}>
+          <span style={{
+            fontFamily: "'Montserrat', sans-serif", fontWeight: 600,
+            fontSize: '8px', letterSpacing: '0.38em',
+            color: 'oklch(68% 0.14 160)', textTransform: 'uppercase'
+          }}>PRODUCTION VIDÉO&nbsp;•&nbsp;RÉCITS&nbsp;•&nbsp;VALORISATION</span>
+        </div>
+
+        {/* ── Titre principal ── */}
+        <h1 style={{
+          fontFamily: "'Montserrat', sans-serif",
+          fontWeight: 900,
+          fontSize: 'clamp(38px, 4.8vw, 76px)',
+          lineHeight: 0.95,
+          letterSpacing: '-0.03em',
+          color: 'white',
+          textTransform: 'uppercase',
+          marginBottom: '32px'
+        }}>
+          Donner une<br />
+          <span style={{ color: 'oklch(74% 0.16 162)' }}>Voix</span><br />
+          à vos<br />
+          <span style={{ color: 'oklch(74% 0.16 162)' }}>Projets</span><span style={{ color: 'oklch(58% 0.12 160)' }}>.</span>
+        </h1>
+
+        {/* Ligne décorative */}
+        <div style={{ width: '56px', height: '2px', background: 'oklch(58% 0.12 160)', marginBottom: '28px' }} />
+
+        {/* Sous-titre */}
+        <p style={{
+          fontSize: '14px', color: 'rgba(255,255,255,0.55)',
+          maxWidth: '390px', marginBottom: '48px', lineHeight: 1.8,
+          fontFamily: "'DM Sans', sans-serif", fontWeight: 300
+        }}>
+          Mettre en lumière l'humain et les récits qui façonnent l'identité de vos organisations et de nos territoires.
+        </p>
+
+        {/* CTA */}
+        <button className="cta-btn">PARLEZ-MOI DE VOTRE HISTOIRE</button>
+      </div>
+
+      {/* ── Texte vertical droit ── */}
+      <div className="vertical-text">RÉCITS&nbsp;&nbsp;VIVANTS</div>
+
+      {/* ── Badge réalisateur ── */}
+      <div style={{
+        position: 'absolute', bottom: 0,
+        left: 'calc(50% - 1px)',
+        zIndex: 20,
+        background: 'oklch(58% 0.12 160)',
+        color: 'white',
+        padding: '12px 26px',
+        fontSize: '8px',
+        letterSpacing: '0.28em',
+        textTransform: 'uppercase',
+        fontFamily: "'Montserrat', sans-serif",
+        fontWeight: 700
+      }}>
+        Rémi Falba · Réalisateur
+      </div>
+
+    </section>
+  );
+}
+
+
+/* ════════════════════════════════════ ABOUT immersif ══ */
+function About() {
+  return (
+    <section id="apropos" style={{
+      position: 'relative',
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'center',
+      padding: '10vh 64px 10vh',
+      scrollMarginTop: '80px',
+      backgroundImage: "url('photo_moi/LIV_2989.jpg')",
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+    }}>
+
+      {/* Scrim sombre pour lisibilité */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(135deg, rgba(4,10,6,0.78) 0%, rgba(4,10,6,0.52) 100%)',
+        zIndex: 0,
+      }} />
+
+      {/* Panneau glassmorphism central */}
+      <motion.div
+        initial={{ opacity: 0, y: 52 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+        viewport={{ once: true, amount: 0.2 }}
+        style={{
+          position: 'relative', zIndex: 1,
+          width: '100%',
+          maxWidth: '960px',
+          background: 'rgba(4, 10, 6, 0.48)',
+          backdropFilter: 'blur(25px)',
+          WebkitBackdropFilter: 'blur(25px)',
+          border: '1px solid rgba(255,255,255,0.11)',
+          padding: '72px 80px 68px',
+        }}
+      >
+
+        {/* Titre */}
+        <h2 style={{
+          fontFamily: "'Montserrat', sans-serif",
+          fontWeight: 900,
+          fontSize: 'clamp(20px, 2.6vw, 40px)',
+          textTransform: 'uppercase',
+          letterSpacing: '-0.02em',
+          color: 'white',
+          lineHeight: 1.15,
+          marginBottom: '52px',
+        }}>
+          Rémi Falba&nbsp;&mdash;&nbsp;Réalisateur de{' '}
+          <span style={{ color: 'oklch(74% 0.16 162)' }}>Récits Vivants</span>
+          <span style={{ color: 'oklch(58% 0.12 160)' }}>.</span>
+        </h2>
+
+        {/* Deux colonnes */}
+        <div className="about-cols" style={{ marginBottom: '52px' }}>
+          <p style={{
+            fontSize: '14px',
+            color: 'rgba(255,255,255,0.68)',
+            lineHeight: 1.9,
+            fontFamily: "'DM Sans', sans-serif",
+            fontWeight: 300,
+          }}>
+            Avec un diplôme en environnement, Man and Biosphere, j'ai appris à observer avant de vouloir montrer. Ce regard, habitué à décrypter la complexité du vivant, est aujourd'hui au cœur de ma démarche de réalisateur.
+          </p>
+          <p style={{
+            fontSize: '14px',
+            color: 'rgba(255,255,255,0.68)',
+            lineHeight: 1.9,
+            fontFamily: "'DM Sans', sans-serif",
+            fontWeight: 300,
+          }}>
+            Mon approche est simple : je m'immerge dans votre univers pour en extraire l'essentiel. Que vous soyez un artisan, une structure publique ou une entreprise, je construis des films sincères qui transforment votre réalité en une histoire mémorable.
+          </p>
+        </div>
+
+        {/* Séparateur */}
+        <div style={{
+          height: '1px',
+          background: 'rgba(255,255,255,0.09)',
+          marginBottom: '44px',
+        }} />
+
+        {/* Citation */}
+        <div style={{ display: 'flex', gap: '26px', alignItems: 'stretch' }}>
+          <div style={{
+            width: '3px',
+            flexShrink: 0,
+            background: 'var(--lichen)',
+            borderRadius: '2px',
+          }} />
+          <p style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 'clamp(17px, 1.8vw, 24px)',
+            fontStyle: 'italic',
+            color: 'rgba(255,255,255,0.86)',
+            lineHeight: 1.7,
+            margin: 0,
+          }}>
+            "Chaque projet a une âme.<br />
+            Mon métier est de lui donner une voix et de faire en sorte qu'on s'en souvienne."
+          </p>
+        </div>
+
+      </motion.div>
+    </section>
+  );
+}
+
+
+/* ════════════════════════════════════ PORTFOLIO ══ */
+const PROJECTS = [
+  {
+    id: 'bourget',
+    num: '01',
+    title: 'Réserve de Biosphère du Lac du Bourget',
+    location: 'Aix-les-Bains',
+    description: 'Mettre en récit un territoire d\'exception. Transformer un dispositif technique complexe en une aventure humaine accessible et inspirante.',
+    tags: ['MAB UNESCO', 'PARTENAIRES', 'INSTITUTIONNEL'],
+    bg: 'linear-gradient(135deg, #071828 0%, #0e3250 55%, #0a2236 100%)',
+    accent: '#5ab8e8',
+    videoUrl: 'https://www.dropbox.com/scl/fi/rbwcn28j8dk5ksu9aoxgd/RB_presentation_V3.mp4?rlkey=qecdjm0adybqqvfajb8patfbo&st=bug8y1py&raw=1',
+  },
+  {
+    id: 'veles',
+    num: '02',
+    title: 'Veles Énergie',
+    location: 'Bordeaux',
+    description: 'Raconter la transition énergétique à travers les visages qui la portent au quotidien pour expliquer une mission et créer une confiance immédiate.',
+    tags: ['BUREAU D\'ÉTUDE', 'ÉNERGIE', 'TRANSITION'],
+    bg: 'linear-gradient(135deg, #060c1c 0%, #0d1e3c 55%, #091428 100%)',
+    accent: '#6ab4f8',
+    videoUrl: 'https://www.dropbox.com/scl/fi/6il1x5mgja5ojzhlue5ai/Veles_manifeste_V1.mp4?rlkey=21c07wkkuidaod6xe01v58ijk&st=3kaexbm7&raw=1',
+  },
+  {
+    id: 'beome',
+    num: '03',
+    title: 'BeeOme',
+    location: 'Lyon',
+    description: 'Accompagner le lancement d\'une formation innovante. Une stratégie narrative complète pour transformer un sujet complexe en un message percutant.',
+    tags: ['LANCEMENT', 'ÉCO-ANXIÉTÉ', 'ACCOMPAGNEMENT'],
+    bg: 'linear-gradient(135deg, #1a0e00 0%, #362008 55%, #28160a 100%)',
+    accent: '#e0aa32',
+    videoUrl: 'https://www.dropbox.com/scl/fi/7lrsht83zuo1nxqpwym0v/BeeOme_Lancement_V4.mp4?rlkey=314rmw040ecfhz7hkzww8jbqk&st=mq61i85i&raw=1',
+  },
+  {
+    id: 'murillo',
+    num: '04',
+    title: 'Vanessa Murillo',
+    location: 'Saint-Girons',
+    description: 'De la gestion administrative à la direction de chantiers. Un portrait sensible sur la reprise d\'une entreprise familiale et l\'affirmation d\'une femme dans le BTP.',
+    tags: ['PORTRAIT', 'ENTREPRISE', 'BTP'],
+    bg: 'linear-gradient(135deg, #101010 0%, #202020 55%, #181818 100%)',
+    accent: '#c8c0b0',
+    videoUrl: 'https://www.dropbox.com/scl/fi/c2a8c43k0xacpf27hd1wa/Vanessa.mp4?rlkey=ltq6nrgni8klht3lzdf80x5mg&st=repqq2kz&raw=1',
+  },
+];
+
+function VideoModal({ project, onClose }) {
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(4,10,6,0.92)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '32px 24px',
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 20 }}
+        transition={{ duration: 0.30, ease: [0.22, 1, 0.36, 1] }}
+        onClick={e => e.stopPropagation()}
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '960px',
+          background: 'rgba(8,18,12,0.88)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          boxShadow: '0 48px 120px rgba(0,0,0,0.75)',
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          padding: '20px 28px 16px',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: 'rgba(255,255,255,0.03)',
+        }}>
+          <div>
+            <div style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '8px', letterSpacing: '0.32em',
+              color: project.accent, textTransform: 'uppercase', marginBottom: '5px',
+            }}>{project.location}</div>
+            <h3 style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: '22px', fontWeight: 700, color: 'white', margin: 0,
+            }}>{project.title}</h3>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              borderRadius: '50%',
+              width: '42px', height: '42px',
+              cursor: 'pointer', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'rgba(255,255,255,0.7)', fontSize: '17px',
+              transition: 'background 0.2s, color 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.16)'; e.currentTarget.style.color = 'white'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+          >✕</button>
+        </div>
+
+        {/* Video area — 16:9 */}
+        <div style={{ position: 'relative', paddingTop: '56.25%', background: '#000' }}>
+          <video
+            controls
+            autoPlay
+            playsInline
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              background: '#000',
+            }}
+          >
+            <source src={project.videoUrl} type="video/mp4" />
+          </video>
+        </div>
+
+        {/* Footer tags */}
+        <div style={{
+          padding: '14px 28px',
+          borderTop: '1px solid rgba(255,255,255,0.07)',
+          display: 'flex', gap: '7px', flexWrap: 'wrap',
+          background: 'rgba(255,255,255,0.02)',
+        }}>
+          {project.tags.map(tag => (
+            <span key={tag} style={{
+              padding: '4px 12px',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: '100px',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '8px', letterSpacing: '0.16em',
+              color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase',
+            }}>{tag}</span>
+          ))}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function ProjectCard({ project, index, onOpenModal }) {
+  const [hovered, setHovered] = useState(false);
+
+  const onEnter = () => setHovered(true);
+  const onLeave = () => setHovered(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 52 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.07 }}
+      transition={{
+        opacity: { duration: 0.6, delay: (index % 2) * 0.12 },
+        y:       { duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: (index % 2) * 0.12 },
+        scale:   { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+      }}
+      viewport={{ once: true, amount: 0.12 }}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      onClick={() => onOpenModal(project)}
+      style={{
+        position: 'relative',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        aspectRatio: '16/9',
+        background: project.bg,
+        boxShadow: hovered
+          ? '0 36px 80px rgba(0,0,0,0.4), 0 12px 32px rgba(0,0,0,0.24)'
+          : '0 4px 20px rgba(0,0,0,0.16)',
+        transition: 'box-shadow 0.45s ease',
+        zIndex: hovered ? 2 : 1,
+      }}
+    >
+      {/* Miniature vidéo vivante */}
+      {project.videoUrl && (
+        <video
+          muted loop playsInline autoPlay preload="metadata"
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            opacity: 0.52,
+            zIndex: 0,
+          }}
+        >
+          <source src={project.videoUrl} type="video/mp4" />
+        </video>
+      )}
+
+      {/* Numéro décoratif */}
+      <div style={{
+        position: 'absolute', top: '16px', right: '20px',
+        fontFamily: "'Montserrat', sans-serif",
+        fontWeight: 900, fontSize: '60px',
+        color: 'rgba(255,255,255,0.06)',
+        lineHeight: 1, letterSpacing: '-0.05em', userSelect: 'none',
+        opacity: hovered ? 0 : 1, transition: 'opacity 0.26s ease',
+      }}>{project.num}</div>
+
+      {/* Barre accent */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0,
+        width: '3px', height: '38px',
+        background: project.accent,
+        opacity: hovered ? 0 : 0.85, transition: 'opacity 0.26s ease',
+      }} />
+
+      {/* État repos : titre en bas */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        padding: '56px 26px 22px',
+        background: 'linear-gradient(to top, rgba(0,0,0,0.84) 0%, transparent 100%)',
+        opacity: hovered ? 0 : 1, transition: 'opacity 0.3s ease',
+      }}>
+        <div style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '9px', letterSpacing: '0.26em',
+          color: 'rgba(255,255,255,0.42)',
+          textTransform: 'uppercase', marginBottom: '5px',
+        }}>{project.location}</div>
+        <h3 style={{
+          fontFamily: "'Playfair Display', serif",
+          fontWeight: 700, fontSize: '20px',
+          color: 'white', lineHeight: 1.2, margin: 0,
+        }}>{project.title}</h3>
+      </div>
+
+      {/* Hover : glassmorphisme plein écran */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'rgba(4, 12, 8, 0.72)',
+        backdropFilter: 'blur(22px)',
+        WebkitBackdropFilter: 'blur(22px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: '12px',
+        opacity: hovered ? 1 : 0,
+        transition: 'opacity 0.36s ease',
+        display: 'flex', flexDirection: 'column',
+        justifyContent: 'flex-end',
+        padding: '28px 32px',
+        pointerEvents: 'none',
+      }}>
+        <div style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '9px', letterSpacing: '0.3em',
+          color: project.accent, textTransform: 'uppercase',
+          marginBottom: '8px',
+        }}>{project.location}</div>
+
+        <h3 style={{
+          fontFamily: "'Playfair Display', serif",
+          fontWeight: 700, fontStyle: 'italic',
+          fontSize: '24px', color: 'white',
+          lineHeight: 1.2, margin: '0 0 12px',
+        }}>{project.title}</h3>
+
+        <p style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '13px', color: 'rgba(255,255,255,0.72)',
+          lineHeight: 1.75, margin: '0 0 18px',
+          maxWidth: '520px',
+        }}>{project.description}</p>
+
+        <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
+          {project.tags.map(tag => (
+            <span key={tag} style={{
+              padding: '4px 12px',
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.14)',
+              borderRadius: '100px',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '9px', letterSpacing: '0.14em',
+              color: 'rgba(255,255,255,0.74)',
+              textTransform: 'uppercase',
+            }}>{tag}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Icône Play centrée au survol */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: hovered ? 1 : 0,
+        transition: 'opacity 0.32s ease',
+        zIndex: 10, pointerEvents: 'none',
+      }}>
+        <div style={{
+          width: '68px', height: '68px', borderRadius: '50%',
+          background: 'rgba(255,255,255,0.13)',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          border: '1px solid rgba(255,255,255,0.32)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transform: hovered ? 'scale(1)' : 'scale(0.8)',
+          transition: 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        }}>
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="white" style={{ marginLeft: '4px' }}>
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function Portfolio() {
+  const [activeProject, setActiveProject] = useState(null);
+
+  return (
+    <section id="realisations" style={{
+      padding: '96px 64px',
+      background: 'var(--fog)',
+      borderTop: '1px solid var(--rule)',
+      borderBottom: '1px solid var(--rule)',
+    }}>
+      <motion.div
+        initial={{ opacity: 0, y: 36 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+        viewport={{ once: true }}
+        style={{ marginBottom: '64px' }}
+      >
+        <span style={{
+          fontFamily: "'Montserrat', sans-serif", fontWeight: 500,
+          fontSize: '8px', letterSpacing: '0.38em',
+          color: 'var(--lichen)', textTransform: 'uppercase',
+          display: 'block', marginBottom: '18px',
+        }}>03 · Réalisations</span>
+        <h2 style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: 'clamp(22px, 2.8vw, 44px)',
+          fontWeight: 700, lineHeight: 1.2, color: 'var(--ink)',
+        }}>
+          Histoires et visages&nbsp;:{' '}
+          <em style={{ fontStyle: 'italic', fontWeight: 400 }}>transformer vos engagements en récits.</em>
+        </h2>
+      </motion.div>
+
+      <div className="portfolio-grid">
+        {PROJECTS.map((project, i) => (
+          <ProjectCard key={project.id} project={project} index={i} onOpenModal={setActiveProject} />
+        ))}
+      </div>
+
+      <_AnimPres>
+        {activeProject && (
+          <VideoModal key={activeProject.id} project={activeProject} onClose={() => setActiveProject(null)} />
+        )}
+      </_AnimPres>
+    </section>
+  );
+}
+
+
+/* ══════════════════════════════ MOUSE VECTOR HOOK ══ */
+function useMouseVector() {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    const h = e => setPos({ x: e.clientX, y: e.clientY });
+    window.addEventListener('mousemove', h, { passive: true });
+    return () => window.removeEventListener('mousemove', h);
+  }, []);
+  return pos;
+}
+
+/* ══════════════════════════════ IMAGE TRAIL IMAGES ══ */
+const TRAIL_IMAGES = [
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2013.56.17.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2013.56.43.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.52.12.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.53.18.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.53.29.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.53.42.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.54.05.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.54.15.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.54.25.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.54.55.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.55.22.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.55.57.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.56.14.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.56.26.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.57.03.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.57.21.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.59.11.png',
+  'clip/Capture%20d%E2%80%99e%CC%81cran%202026-05-12%20a%CC%80%2015.59.33.png',
+  'clip/DJI_0189-2.jpg',
+  'clip/dji_fly_20250825_183446_242_1756139750096_photo_optimized.JPG',
+  'clip/Document.png',
+  'clip/image%20%281%29.png',
+  'clip/image%20%282%29.png',
+  'clip/image.png',
+  'clip/IMG_7146.jpg',
+  'clip/IMG_7357.jpg',
+  'clip/IMG_8028.jpg',
+  'clip/IMG_8054.jpg',
+  'clip/IMG_8137.jpg',
+  'clip/IMG_8219.jpg',
+  'clip/LIV_2876.jpg',
+  'clip/LIV_2910.jpg',
+  'clip/LIV_2935.jpg',
+  'clip/LIV_2956.jpg',
+  'clip/LIV_2977.jpg',
+  'clip/LIV_3049.jpg',
+  'clip/LIV_8497.jpg',
+  'clip/LIV_8509.jpg',
+  'clip/LIV_8551.jpg',
+  'clip/LIV_8646_2.jpg',
+  'clip/LOGO%20haute%20def%20%281%29%20%281%29.png',
+  'clip/LogosPnrPaca2022.jpg',
+  'clip/RB-LACDUBOURGET-Q.svg',
+];
+
+/* ══════════════════════════════ IMAGE TRAIL COMPONENT ══ */
+function ImageTrail({ images, children, spawnDist = 42, maxItems = 16, rotRange = 22 }) {
+  const containerRef = useRef(null);
+  const [items, setItems] = useState([]);
+  const mouse = useMouseVector();
+  const lastSpawn = useRef({ x: -9999, y: -9999 });
+  const imgIdx = useRef(0);
+  const idCtr = useRef(0);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (
+      mouse.x < rect.left || mouse.x > rect.right ||
+      mouse.y < rect.top  || mouse.y > rect.bottom
+    ) return;
+    if (Math.hypot(mouse.x - lastSpawn.current.x, mouse.y - lastSpawn.current.y) < spawnDist) return;
+
+    lastSpawn.current = { x: mouse.x, y: mouse.y };
+    const id = idCtr.current++;
+    const newItem = {
+      id,
+      x: mouse.x - rect.left,
+      y: mouse.y - rect.top,
+      src: images[imgIdx.current % images.length],
+      rot: (Math.random() * 2 - 1) * rotRange,
+    };
+    imgIdx.current++;
+    setItems(prev => [...prev.slice(-(maxItems - 1)), newItem]);
+    setTimeout(() => setItems(prev => prev.filter(it => it.id !== id)), 850);
+  }, [mouse.x, mouse.y]);
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+      {items.map(it => (
+        <div
+          key={it.id}
+          className="trail-item"
+          style={{ left: it.x, top: it.y, '--trail-rot': `${it.rot}deg` }}
+        >
+          <img
+            src={it.src}
+            alt=""
+            style={{
+              width: '74px',
+              height: '48px',
+              objectFit: 'cover',
+              borderRadius: '8px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.16), 0 2px 6px rgba(0,0,0,0.08)',
+              display: 'block',
+            }}
+          />
+        </div>
+      ))}
+      {children}
+    </div>
+  );
+}
+
+/* ══════════════════════════════ IMAGE TRAIL SECTION ══ */
+function ImageTrailSection() {
+  const scrollToContact = () =>
+    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+
+  return (
+    <section style={{
+      position: 'relative',
+      height: '50vh',
+      background: 'var(--fog)',
+      borderTop: '1px solid var(--rule)',
+      cursor: 'none',
+      overflow: 'hidden',
+    }}>
+      <ImageTrail images={TRAIL_IMAGES}>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10,
+          pointerEvents: 'none',
+        }}>
+          <button
+            className="trail-cta"
+            onClick={scrollToContact}
+            style={{
+              fontSize: 'clamp(28px, 4.2vw, 58px)',
+              pointerEvents: 'all',
+              lineHeight: 1.1,
+            }}
+          >
+            Découvrir mes<br />autres projets
+          </button>
+
+          <div style={{
+            marginTop: '22px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '14px',
+            opacity: 0.38,
+            pointerEvents: 'none',
+          }}>
+            <div style={{ width: '28px', height: '1px', background: 'var(--ink)' }} />
+            <span style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: '9px',
+              letterSpacing: '0.26em',
+              color: 'var(--ink)',
+              textTransform: 'uppercase',
+            }}>Laissez votre souris se promener</span>
+            <div style={{ width: '28px', height: '1px', background: 'var(--ink)' }} />
+          </div>
+        </div>
+      </ImageTrail>
+    </section>
+  );
+}
+
+
+/* ════════════════════════════════════ STRATÉGIE ══ */
+/* ════════════════════════════════════════ ETHEREAL SHADOW ══ */
+function mapEtherealRange(value, fromLow, fromHigh, toLow, toHigh) {
+  if (fromLow === fromHigh) return toLow;
+  return toLow + ((value - fromLow) / (fromHigh - fromLow)) * (toHigh - toLow);
+}
+
+function EtherealShadow({ color = 'rgba(128,128,128,1)', animation, noise, sizing = 'fill', style }) {
+  const rawId = React.useId().replace(/:/g, '');
+  const instanceId = `shadowoverlay-${rawId}`;
+  const animationEnabled = animation && animation.scale > 0;
+  const feColorMatrixRef = useRef(null);
+  const hueRotateMotionValue = fmUseMotionValue(180);
+  const hueRotateAnimation = useRef(null);
+
+  const displacementScale = animation ? mapEtherealRange(animation.scale, 1, 100, 20, 100) : 0;
+  const animationDuration = animation ? mapEtherealRange(animation.speed, 1, 100, 1000, 50) : 1;
+
+  useEffect(() => {
+    if (!feColorMatrixRef.current || !animationEnabled || !fmAnimate) return;
+    if (hueRotateAnimation.current) hueRotateAnimation.current.stop();
+    hueRotateMotionValue.set(0);
+    hueRotateAnimation.current = fmAnimate(hueRotateMotionValue, 360, {
+      duration: animationDuration / 25,
+      repeat: Infinity, repeatType: 'loop', repeatDelay: 0,
+      ease: 'linear', delay: 0,
+      onUpdate: (value) => {
+        if (feColorMatrixRef.current) feColorMatrixRef.current.setAttribute('values', String(value));
+      },
+    });
+    return () => { if (hueRotateAnimation.current) hueRotateAnimation.current.stop(); };
+  }, [animationEnabled, animationDuration]);
+
+  return (
+    <div style={{ overflow: 'hidden', position: 'relative', width: '100%', height: '100%', ...style }}>
+      <div style={{
+        position: 'absolute',
+        inset: -displacementScale,
+        filter: animationEnabled ? `url(#${instanceId}) blur(4px)` : 'none',
+      }}>
+        {animationEnabled && (
+          <svg style={{ position: 'absolute' }}>
+            <defs>
+              <filter id={instanceId}>
+                <feTurbulence
+                  result="undulation" numOctaves="2"
+                  baseFrequency={`${mapEtherealRange(animation.scale, 0, 100, 0.001, 0.0005)},${mapEtherealRange(animation.scale, 0, 100, 0.004, 0.002)}`}
+                  seed="0" type="turbulence"
+                />
+                <feColorMatrix ref={feColorMatrixRef} in="undulation" type="hueRotate" values="180" />
+                <feColorMatrix in="dist" result="circulation" type="matrix"
+                  values="4 0 0 0 1  4 0 0 0 1  4 0 0 0 1  1 0 0 0 0" />
+                <feDisplacementMap in="SourceGraphic" in2="circulation" scale={displacementScale} result="dist" />
+                <feDisplacementMap in="dist" in2="undulation" scale={displacementScale} result="output" />
+              </filter>
+            </defs>
+          </svg>
+        )}
+        <div style={{
+          backgroundColor: color,
+          maskImage: `url('https://framerusercontent.com/images/ceBGguIpUU8luwByxuQz79t7To.png')`,
+          WebkitMaskImage: `url('https://framerusercontent.com/images/ceBGguIpUU8luwByxuQz79t7To.png')`,
+          maskSize: sizing === 'stretch' ? '100% 100%' : 'cover',
+          WebkitMaskSize: sizing === 'stretch' ? '100% 100%' : 'cover',
+          maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+          maskPosition: 'center', WebkitMaskPosition: 'center',
+          width: '100%', height: '100%',
+        }} />
+      </div>
+      {noise && noise.opacity > 0 && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `url("https://framerusercontent.com/images/g0QcWrxr87K0ufOxIUFBakwYA8.png")`,
+          backgroundSize: noise.scale * 200,
+          backgroundRepeat: 'repeat',
+          opacity: noise.opacity / 2,
+        }} />
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════ STRATÉGIE ══ */
+function Strategie() {
+  const sectionRef = useRef(null);
+  const containerRef = useRef(null);
+  const stepRefs = useRef([]);
+  const [trailProgress, setTrailProgress] = useState(0);
+  const [activeStep, setActiveStep] = useState(-1);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      const wh = window.innerHeight;
+      const rect = container.getBoundingClientRect();
+      const h = container.offsetHeight;
+
+      /* Trail: viewport centre mapped into the steps container height.
+         The line runs from y=40 to y=h-40 inside the container.
+         When the viewport centre is at a connector's y, the fill reaches exactly that connector. */
+      const lineStart = 40;
+      const lineEnd = h - 40;
+      const activeY = wh / 2 - rect.top;
+      const p = Math.max(0, Math.min(1, (activeY - lineStart) / (lineEnd - lineStart)));
+      setTrailProgress(p);
+
+      /* Active step: whichever step centre is within 28% of viewport height from the centre */
+      const centerY = wh / 2;
+      let closest = -1;
+      let closestDist = Infinity;
+      stepRefs.current.forEach((ref, i) => {
+        if (!ref) return;
+        const sr = ref.getBoundingClientRect();
+        const dist = Math.abs((sr.top + sr.height / 2) - centerY);
+        if (dist < closestDist && dist < wh * 0.28) { closestDist = dist; closest = i; }
+      });
+      setActiveStep(closest);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const STEP_ICONS = {
+    'COMPRENDRE': (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:'29px',height:'29px'}}>
+        <circle cx="12" cy="12" r="10"/>
+        <path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/>
+      </svg>
+    ),
+    'ANALYSER': (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:'29px',height:'29px'}}>
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+      </svg>
+    ),
+    'RÉPARER': (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:'29px',height:'29px'}}>
+        <path d="m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9"/>
+        <path d="m18 15 4-4"/>
+        <path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14"/>
+      </svg>
+    ),
+    'PROPULSER': (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:'29px',height:'29px'}}>
+        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+        <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+        <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+        <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+      </svg>
+    ),
+  };
+
+  const steps = [
+    {
+      num: '01', label: 'COMPRENDRE',
+      text: "On définit votre client idéal et ses besoins réels. On ne filme pas pour tout le monde, mais pour celui qui va signer.",
+    },
+    {
+      num: '02', label: 'ANALYSER',
+      text: "On vérifie si votre message est clair. Votre prospect doit comprendre votre valeur en 5 secondes.",
+    },
+    {
+      num: '03', label: 'RÉPARER',
+      text: "On identifie où vous perdez vos clients. Nous localisons les blocages dans votre parcours de vente.",
+    },
+    {
+      num: '04', label: 'PROPULSER',
+      text: "On livre les vidéos qui déclenchent l'action. Des outils concrets pour augmenter vos résultats.",
+    },
+  ];
+
+  return (
+    <section id="offre" ref={sectionRef} style={{
+      position: 'relative',
+      background: 'var(--fog)',
+      padding: '96px 64px 72px',
+      borderTop: '1px solid var(--rule)',
+      overflow: 'hidden',
+    }}>
+
+      {/* ── Fond Ethereal Shadow — version lumineuse ── */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+        <EtherealShadow
+          color="rgba(0, 0, 0, 0.15)"
+          animation={{ scale: 100, speed: 20 }}
+          noise={{ opacity: 0.15, scale: 1.2 }}
+          sizing="fill"
+        />
+      </div>
+
+      {/* ── Contenu ── */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
+        {/* En-tête de section */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          viewport={{ once: true }}
+          style={{ marginBottom: '64px' }}
+        >
+          <span style={{
+            fontFamily: "'Montserrat', sans-serif", fontWeight: 500,
+            fontSize: '8px', letterSpacing: '0.38em',
+            color: 'var(--lichen)', textTransform: 'uppercase',
+            display: 'block', marginBottom: '14px',
+          }}>04 · Stratégie</span>
+          <h2 style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 'clamp(24px, 3vw, 48px)',
+            fontWeight: 300, lineHeight: 1.2, color: '#1a1a1a',
+            maxWidth: '580px',
+          }}>
+            Une méthode en quatre actes&nbsp;:{' '}
+            <em>du diagnostic à la conversion.</em>
+          </h2>
+        </motion.div>
+
+        {/* Étapes + ligne de vie */}
+        <div ref={containerRef} style={{ position: 'relative', maxWidth: '880px', margin: '0 auto' }}>
+
+          {/* Ligne verticale en pointillés */}
+          <div className="strategie-trail" style={{
+            position: 'absolute', left: '50%', top: '40px', bottom: '40px',
+            width: '1px', transform: 'translateX(-50%)', zIndex: 1,
+          }}>
+            <div style={{
+              position: 'absolute', inset: 0,
+              backgroundImage: 'repeating-linear-gradient(to bottom, rgba(88,155,120,0.22) 0px, rgba(88,155,120,0.22) 6px, transparent 6px, transparent 14px)',
+            }} />
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, height: '100%',
+              backgroundImage: 'repeating-linear-gradient(to bottom, oklch(58% 0.12 160) 0px, oklch(58% 0.12 160) 6px, transparent 6px, transparent 14px)',
+              clipPath: `inset(0 0 ${(1 - trailProgress) * 100}% 0)`,
+            }} />
+            {trailProgress > 0.01 && trailProgress < 0.99 && (
+              <div style={{
+                position: 'absolute', left: '50%', top: `${trailProgress * 100}%`,
+                transform: 'translate(-50%, -50%)',
+                width: '5px', height: '5px', borderRadius: '50%',
+                background: 'var(--lichen)',
+                boxShadow: '0 0 8px oklch(58% 0.12 160)',
+              }} />
+            )}
+          </div>
+
+          {/* Cartes */}
+          {steps.map((step, i) => {
+            const isLeft = i % 2 === 0;
+            return (
+              <motion.div
+                key={step.num}
+                ref={el => stepRefs.current[i] = el}
+                className="strategie-step"
+                initial={{ opacity: 0, x: isLeft ? -40 : 40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true, amount: 0.35 }}
+                style={{
+                  display: 'flex',
+                  justifyContent: isLeft ? 'flex-start' : 'flex-end',
+                  marginBottom: i < 3 ? '44px' : 0,
+                  position: 'relative', zIndex: 3,
+                }}
+              >
+                <div className="strategie-card" style={{
+                  width: '41%',
+                  background: '#ffffff',
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  borderRadius: '6px',
+                  padding: '24px 28px 26px',
+                  boxShadow: '0 2px 20px rgba(0,0,0,0.07)',
+                }}>
+                  {/* Icône */}
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '40px', height: '40px', borderRadius: '50%',
+                    background: 'rgba(88,155,120,0.08)',
+                    border: '1px solid rgba(88,155,120,0.18)',
+                    color: 'var(--lichen)', marginBottom: '14px',
+                  }}>{STEP_ICONS[step.label]}</div>
+
+                  {/* Titre font-black tracking-widest */}
+                  <h3 style={{
+                    fontFamily: "'Montserrat', sans-serif",
+                    fontWeight: 900,
+                    fontSize: 'clamp(11px, 1.1vw, 13px)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.18em',
+                    color: '#1a1a1a',
+                    marginBottom: '10px',
+                    lineHeight: 1.2,
+                  }}>{step.label}</h3>
+
+                  <p style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: '13px',
+                    color: 'oklch(42% 0.010 220)',
+                    lineHeight: 1.75,
+                    margin: 0,
+                  }}>{step.text}</p>
+                </div>
+
+                {/* Point d'ancrage 16px — pulse uniquement quand l'étape est active */}
+                <div className={activeStep === i ? 'strategie-connector' : 'strategie-connector-inactive'} style={{
+                  position: 'absolute', left: '50%', top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '16px', height: '16px', borderRadius: '50%',
+                  background: '#ffffff',
+                  border: '1.5px solid var(--lichen)',
+                  zIndex: 4,
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <div style={{
+                    width: '6px', height: '6px', borderRadius: '50%',
+                    background: 'var(--lichen)',
+                  }} />
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* CTA bandeau */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+          viewport={{ once: true, amount: 0.5 }}
+          style={{
+            maxWidth: '840px',
+            margin: '56px auto 0',
+            padding: '28px 40px',
+            background: '#ffffff',
+            border: '1px solid rgba(0,0,0,0.07)',
+            borderRadius: '6px',
+            boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '32px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <p style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 'clamp(17px, 2vw, 26px)',
+            fontWeight: 400,
+            color: 'var(--ink)',
+            lineHeight: 1.3,
+            margin: 0,
+          }}>
+            Ne rien changer a un coût.
+          </p>
+          <a href="#contact" style={{ textDecoration: 'none', flexShrink: 0 }}>
+            <button className="cta-audit" style={{
+              padding: '14px 32px',
+              fontSize: '8.5px',
+              letterSpacing: '0.28em',
+            }}>
+              ME CONTACTER
+            </button>
+          </a>
+        </motion.div>
+
+      </div>
+    </section>
+  );
+}
+
+
+/* ════════════════════════════════════════ CONTACT ══ */
+/* ════════════════════════════════════════ SPIRAL ANIMATION ══ */
+
+class SpiralVec2 {
+  constructor(x, y) { this.x = x; this.y = y; }
+  static random(min, max) { return min + Math.random() * (max - min); }
+}
+class SpiralVec3 {
+  constructor(x, y, z) { this.x = x; this.y = y; this.z = z; }
+}
+
+class SpiralStar {
+  constructor(cameraZ, cameraTravelDistance) {
+    this.angle = Math.random() * Math.PI * 2;
+    this.distance = 30 * Math.random() + 15;
+    this.rotationDirection = Math.random() > 0.5 ? 1 : -1;
+    this.expansionRate = 1.2 + Math.random() * 0.8;
+    this.finalScale = 0.7 + Math.random() * 0.6;
+    this.dx = this.distance * Math.cos(this.angle);
+    this.dy = this.distance * Math.sin(this.angle);
+    this.spiralLocation = (1 - Math.pow(1 - Math.random(), 3.0)) / 1.3;
+    this.z = SpiralVec2.random(0.5 * cameraZ, cameraTravelDistance + cameraZ);
+    const lrp = (s, e, t) => s * (1 - t) + e * t;
+    this.z = lrp(this.z, cameraTravelDistance / 2, 0.3 * this.spiralLocation);
+    this.strokeWeightFactor = Math.pow(Math.random(), 2.0);
+  }
+
+  render(p, ctrl) {
+    const sp = ctrl.spiralPath(this.spiralLocation);
+    const q = p - this.spiralLocation;
+    if (q <= 0) return;
+
+    const dp = ctrl.constrain(4 * q, 0, 1);
+    const lin = dp, elast = ctrl.easeOutElastic(dp), pow = Math.pow(dp, 2);
+    let ease;
+    if (dp < 0.3)      ease = ctrl.lerp(lin, pow, dp / 0.3);
+    else if (dp < 0.7) { const t = (dp - 0.3) / 0.4; ease = ctrl.lerp(pow, elast, t); }
+    else               ease = elast;
+
+    let sx, sy;
+    if (dp < 0.3) {
+      sx = ctrl.lerp(sp.x, sp.x + this.dx * 0.3, ease / 0.3);
+      sy = ctrl.lerp(sp.y, sp.y + this.dy * 0.3, ease / 0.3);
+    } else if (dp < 0.7) {
+      const mp = (dp - 0.3) / 0.4;
+      const cs = Math.sin(mp * Math.PI) * this.rotationDirection * 1.5;
+      const bx = sp.x + this.dx * 0.3, by = sp.y + this.dy * 0.3;
+      const tx = sp.x + this.dx * 0.7, ty = sp.y + this.dy * 0.7;
+      const px2 = -this.dy * 0.4 * cs, py2 = this.dx * 0.4 * cs;
+      sx = ctrl.lerp(bx, tx, mp) + px2 * mp;
+      sy = ctrl.lerp(by, ty, mp) + py2 * mp;
+    } else {
+      const fp = (dp - 0.7) / 0.3;
+      const bx = sp.x + this.dx * 0.7, by = sp.y + this.dy * 0.7;
+      const td = this.distance * this.expansionRate * 1.5;
+      const sa = this.angle + 1.2 * this.rotationDirection * fp * Math.PI;
+      sx = ctrl.lerp(bx, sp.x + td * Math.cos(sa), fp);
+      sy = ctrl.lerp(by, sp.y + td * Math.sin(sa), fp);
+    }
+
+    const vx = (this.z - ctrl.cameraZ) * sx / ctrl.viewZoom;
+    const vy = (this.z - ctrl.cameraZ) * sy / ctrl.viewZoom;
+    let sm = 1.0;
+    if (dp < 0.6) sm = 1.0 + dp * 0.2;
+    else { const t = (dp - 0.6) / 0.4; sm = 1.2 * (1 - t) + this.finalScale * t; }
+    ctrl.showProjectedDot(new SpiralVec3(vx, vy, this.z), 8.5 * this.strokeWeightFactor * sm);
+  }
+}
+
+class SpiralController {
+  constructor(canvas, ctx, dpr, size) {
+    this.canvas = canvas; this.ctx = ctx; this.dpr = dpr; this.size = size;
+    this.time = 0; this.stars = [];
+    this.changeEventTime = 0.32;
+    this.cameraZ = -400;
+    this.cameraTravelDistance = 3400;
+    this.startDotYOffset = 28;
+    this.viewZoom = 100;
+    this.numberOfStars = 5000;
+    this.trailLength = 80;
+    this.timeline = gsap.timeline({ repeat: -1 });
+    this._setupSeededStars();
+    this._createStars();
+    this._setupTimeline();
+  }
+
+  _setupSeededStars() {
+    const orig = Math.random;
+    let seed = 1234;
+    Math.random = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    this._createStars();
+    Math.random = orig;
+  }
+  _createStars() {
+    for (let i = 0; i < this.numberOfStars; i++)
+      this.stars.push(new SpiralStar(this.cameraZ, this.cameraTravelDistance));
+  }
+  _setupTimeline() {
+    this.timeline.to(this, { time: 1, duration: 15, repeat: -1, ease: 'none', onUpdate: () => this.render() });
+  }
+
+  ease(p, g) { return p < 0.5 ? 0.5 * Math.pow(2 * p, g) : 1 - 0.5 * Math.pow(2 * (1 - p), g); }
+  easeOutElastic(x) {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    return Math.pow(2, -8 * x) * Math.sin((x * 8 - 0.75) * (2 * Math.PI / 4.5)) + 1;
+  }
+  map(v, s1, e1, s2, e2) { return s2 + (e2 - s2) * ((v - s1) / (e1 - s1)); }
+  constrain(v, mn, mx) { return Math.min(Math.max(v, mn), mx); }
+  lerp(s, e, t) { return s * (1 - t) + e * t; }
+
+  spiralPath(p) {
+    p = this.constrain(1.2 * p, 0, 1);
+    p = this.ease(p, 1.8);
+    const theta = 2 * Math.PI * 6 * Math.sqrt(p);
+    const r = 170 * Math.sqrt(p);
+    return new SpiralVec2(r * Math.cos(theta), r * Math.sin(theta) + this.startDotYOffset);
+  }
+
+  rotate(v1, v2, p, orientation) {
+    const mid = new SpiralVec2((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
+    const dx = v1.x - mid.x, dy = v1.y - mid.y;
+    const angle = Math.atan2(dy, dx);
+    const o = orientation ? -1 : 1;
+    const r = Math.sqrt(dx * dx + dy * dy);
+    const bounce = Math.sin(p * Math.PI) * 0.05 * (1 - p);
+    const ef = this.easeOutElastic(p);
+    return new SpiralVec2(
+      mid.x + r * (1 + bounce) * Math.cos(angle + o * Math.PI * ef),
+      mid.y + r * (1 + bounce) * Math.sin(angle + o * Math.PI * ef)
+    );
+  }
+
+  showProjectedDot(pos, sizeFactor) {
+    const t2 = this.constrain(this.map(this.time, this.changeEventTime, 1, 0, 1), 0, 1);
+    const camZ = this.cameraZ + this.ease(Math.pow(t2, 1.2), 1.8) * this.cameraTravelDistance;
+    if (pos.z > camZ) {
+      const depth = pos.z - camZ;
+      const x = this.viewZoom * pos.x / depth;
+      const y = this.viewZoom * pos.y / depth;
+      const sw = 400 * sizeFactor / depth;
+      this.ctx.lineWidth = sw;
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, 0.5, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+  }
+
+  _drawStartDot() {
+    if (this.time > this.changeEventTime) {
+      const dy = this.cameraZ * this.startDotYOffset / this.viewZoom;
+      this.showProjectedDot(new SpiralVec3(0, dy, this.cameraTravelDistance), 2.5);
+    }
+  }
+
+  _drawTrail(t1) {
+    for (let i = 0; i < this.trailLength; i++) {
+      const f = this.map(i, 0, this.trailLength, 1.1, 0.1);
+      const sw = (1.3 * (1 - t1) + 3.0 * Math.sin(Math.PI * t1)) * f;
+      this.ctx.fillStyle = 'white'; this.ctx.lineWidth = sw;
+      const pos = this.spiralPath(t1 - 0.00015 * i);
+      const off = new SpiralVec2(pos.x + 5, pos.y + 5);
+      const rot = this.rotate(pos, off, Math.sin(this.time * Math.PI * 2) * 0.5 + 0.5, i % 2 === 0);
+      this.ctx.beginPath();
+      this.ctx.arc(rot.x, rot.y, sw / 2, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+  }
+
+  render() {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, this.size, this.size);
+    ctx.save();
+    ctx.translate(this.size / 2, this.size / 2);
+    const t1 = this.constrain(this.map(this.time, 0, this.changeEventTime + 0.25, 0, 1), 0, 1);
+    const t2 = this.constrain(this.map(this.time, this.changeEventTime, 1, 0, 1), 0, 1);
+    ctx.rotate(-Math.PI * this.ease(t2, 2.7));
+    this._drawTrail(t1);
+    ctx.fillStyle = 'white';
+    for (const star of this.stars) star.render(t1, this);
+    this._drawStartDot();
+    ctx.restore();
+  }
+
+  destroy() { this.timeline.kill(); }
+}
+
+function SpiralAnimation() {
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const animRef = useRef(null);
+  const [dims, setDims] = useState({ w: 800, h: 600 });
+
+  useEffect(() => {
+    const update = () => {
+      const el = containerRef.current;
+      if (el) setDims({ w: el.offsetWidth, h: el.offsetHeight });
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !gsap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const size = Math.max(dims.w, dims.h);
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = dims.w + 'px';
+    canvas.style.height = dims.h + 'px';
+    ctx.scale(dpr, dpr);
+    animRef.current = new SpiralController(canvas, ctx, dpr, size);
+    return () => { if (animRef.current) { animRef.current.destroy(); animRef.current = null; } };
+  }, [dims.w, dims.h]);
+
+  return (
+    <div ref={containerRef} style={{ position: 'absolute', inset: 0 }}>
+      <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0 }} />
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════ CONTACT ══ */
+function Contact() {
+  const [view, setView] = useState('cta');   // 'cta' | 'form' | 'sent'
+  const [status, setStatus] = useState('idle'); // 'idle' | 'sending' | 'error'
+  const [fields, setFields] = useState({ nom: '', email: '', objet: '', message: '' });
+
+  const onChange = e => setFields(f => ({ ...f, [e.target.name]: e.target.value }));
+
+  const onSubmit = async e => {
+    e.preventDefault();
+    setStatus('sending');
+    try {
+      const res = await fetch('https://formspree.io/f/xoqgjvov', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(fields),
+      });
+      if (res.ok) { setView('sent'); setStatus('idle'); }
+      else setStatus('error');
+    } catch { setStatus('error'); }
+  };
+
+  const labelStyle = { fontFamily: "'Montserrat', sans-serif", fontWeight: 500,
+    fontSize: '8px', letterSpacing: '0.40em', color: 'oklch(68% 0.14 160)',
+    textTransform: 'uppercase', display: 'block', marginBottom: '28px' };
+
+  return (
+    <section id="contact" style={{
+      position: 'relative', background: '#000000',
+      minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      textAlign: 'center', padding: '80px 24px', overflow: 'hidden',
+    }}>
+      <SpiralAnimation />
+
+      <div style={{ position: 'relative', zIndex: 10, width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 36 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+          viewport={{ once: true }}
+          style={{
+            padding: view === 'form' ? '44px 52px 48px' : '72px 80px 64px',
+            background: 'rgba(0,0,0,0.18)',
+            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            maxWidth: view === 'form' ? '640px' : '600px',
+            width: '100%',
+            transition: 'padding 0.4s ease, max-width 0.4s ease',
+          }}
+        >
+          {/* Label permanent */}
+          <div style={labelStyle}>05 · Contact</div>
+
+          {/* ── État CTA ── */}
+          <_AnimPres mode="wait">
+            {view === 'cta' && (
+              <motion.div key="cta"
+                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.28 }}
+              >
+                <h2 style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 300,
+                  color: '#ffffff', lineHeight: 1.25, marginBottom: '48px', letterSpacing: '-0.01em',
+                }}>
+                  Un projet ?{' '}
+                  <em style={{ color: 'rgba(255,255,255,0.65)' }}>Parlons-en.</em>
+                </h2>
+                <button className="cta-contact" onClick={() => setView('form')}>
+                  PARLEZ-MOI DE VOTRE HISTOIRE
+                </button>
+                <p style={{
+                  fontFamily: "'DM Sans', sans-serif", fontSize: '12px',
+                  color: 'rgba(255,255,255,0.55)', letterSpacing: '0.02em',
+                  lineHeight: 1.85, margin: '22px auto 0', maxWidth: '340px',
+                }}>
+                  Une idée, un projet, des questions ?{' '}
+                  <span style={{ color: '#ffffff' }}>Prenons un café.</span>
+                </p>
+              </motion.div>
+            )}
+
+            {/* ── État Formulaire ── */}
+            {view === 'form' && (
+              <motion.div key="form"
+                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.28 }}
+              >
+                {/* Retour */}
+                <button onClick={() => { setView('cta'); setStatus('idle'); }} style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'rgba(255,255,255,0.38)', fontFamily: "'DM Sans', sans-serif",
+                  fontSize: '11px', letterSpacing: '0.08em', display: 'flex',
+                  alignItems: 'center', gap: '6px', marginBottom: '28px', padding: 0,
+                  transition: 'color 0.2s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.75)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.38)'}
+                >
+                  ← Retour
+                </button>
+
+                <h2 style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: 'clamp(22px, 2.6vw, 34px)', fontWeight: 300,
+                  color: '#ffffff', lineHeight: 1.25, marginBottom: '32px',
+                  textAlign: 'left',
+                }}>
+                  Racontez-moi <em style={{ color: 'rgba(255,255,255,0.60)' }}>votre projet.</em>
+                </h2>
+
+                {/* Formspree endpoint → remplacer xoqgjvov */}
+                <form onSubmit={onSubmit} action="https://formspree.io/f/xoqgjvov" method="POST"
+                  style={{ textAlign: 'left' }}
+                >
+                  {/* Ligne Nom + Email */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                    <div>
+                      <label className="contact-label" htmlFor="nom">Nom</label>
+                      <input id="nom" name="nom" type="text" required placeholder="Votre nom"
+                        className="contact-input" value={fields.nom} onChange={onChange} />
+                    </div>
+                    <div>
+                      <label className="contact-label" htmlFor="email">Email</label>
+                      <input id="email" name="email" type="email" required placeholder="vous@exemple.com"
+                        className="contact-input" value={fields.email} onChange={onChange} />
+                    </div>
+                  </div>
+
+                  {/* Objet */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <label className="contact-label" htmlFor="objet">Objet</label>
+                    <input id="objet" name="objet" type="text" required placeholder="Votre projet en quelques mots"
+                      className="contact-input" value={fields.objet} onChange={onChange} />
+                  </div>
+
+                  {/* Message */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <label className="contact-label" htmlFor="message">Message</label>
+                    <textarea id="message" name="message" required rows={4}
+                      placeholder="Décrivez votre projet, vos attentes, votre calendrier..."
+                      className="contact-input" value={fields.message} onChange={onChange}
+                    />
+                  </div>
+
+                  {/* Erreur */}
+                  {status === 'error' && (
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px',
+                      color: 'rgba(255,100,100,0.85)', marginBottom: '14px', letterSpacing: '0.04em' }}>
+                      Envoi impossible. Vérifiez votre connexion internet et réessayez.
+                    </p>
+                  )}
+
+                  {/* Submit */}
+                  <button type="submit" disabled={status === 'sending'} className="cta-contact"
+                    style={{ padding: '18px 48px', fontSize: '9px', letterSpacing: '0.30em',
+                      opacity: status === 'sending' ? 0.6 : 1, transition: 'opacity 0.2s',
+                      cursor: status === 'sending' ? 'wait' : 'pointer',
+                    }}
+                  >
+                    {status === 'sending' ? 'ENVOI EN COURS…' : 'ENVOYER'}
+                  </button>
+                </form>
+              </motion.div>
+            )}
+
+            {/* ── État Succès ── */}
+            {view === 'sent' && (
+              <motion.div key="sent"
+                initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }} transition={{ duration: 0.35 }}
+                style={{ padding: '24px 0 8px' }}
+              >
+                {/* Icône check */}
+                <div style={{
+                  width: '64px', height: '64px', borderRadius: '50%',
+                  border: '1.5px solid oklch(58% 0.12 160)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 28px',
+                }}>
+                  <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
+                    stroke="oklch(58% 0.12 160)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <h2 style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 300,
+                  color: '#ffffff', lineHeight: 1.25, marginBottom: '16px',
+                }}>
+                  Message envoyé.
+                </h2>
+                <p style={{
+                  fontFamily: "'DM Sans', sans-serif", fontSize: '13px',
+                  color: 'rgba(255,255,255,0.52)', lineHeight: 1.8, marginBottom: '36px',
+                }}>
+                  Message envoyé avec succès ! Rémi vous répondra très vite.
+                </p>
+                <button onClick={() => { setView('cta'); setFields({ nom:'', email:'', objet:'', message:'' }); }}
+                  style={{
+                    background: 'none', border: '1px solid rgba(255,255,255,0.18)',
+                    borderRadius: '4px', padding: '10px 28px', cursor: 'pointer',
+                    color: 'rgba(255,255,255,0.55)', fontFamily: "'Montserrat', sans-serif",
+                    fontSize: '8px', letterSpacing: '0.26em', textTransform: 'uppercase',
+                    transition: 'border-color 0.2s, color 0.2s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.45)'; e.currentTarget.style.color='white'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.18)'; e.currentTarget.style.color='rgba(255,255,255,0.55)'; }}
+                >Nouveau message</button>
+              </motion.div>
+            )}
+          </_AnimPres>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+
+/* ══════════════════════════════════════ CLIENTS SLIDER ══ */
+const CLIENT_LOGOS = [
+  { id: 'doc',   src: 'assets_clients/Document.png',                   alt: 'Client' },
+  { id: 'img1',  src: 'assets_clients/image (1).png',                  alt: 'Client' },
+  { id: 'img2',  src: 'assets_clients/image (2).png',                  alt: 'Client' },
+  { id: 'img',   src: 'assets_clients/image.png',                      alt: 'Client' },
+  { id: 'logo1', src: 'assets_clients/LOGO haute def (1) (1).png',     alt: 'Client' },
+  { id: 'pnr',   src: 'assets_clients/LogosPnrPaca2022.jpg',           alt: 'PNR PACA' },
+  { id: 'rb',    src: 'assets_clients/RB-LACDUBOURGET-Q.svg',          alt: 'RB Lac du Bourget' },
+];
+
+function ClientsSlider() {
+  const doubled = [...CLIENT_LOGOS, ...CLIENT_LOGOS];
+
+  return (
+    <section style={{
+      backgroundImage: "url('photo_moi/LIV_2989.jpg')",
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+    }}>
+      {/* Liquid glass overlay */}
+      <div style={{
+        background: 'rgba(4, 10, 6, 0.48)',
+        backdropFilter: 'blur(25px)',
+        WebkitBackdropFilter: 'blur(25px)',
+        borderTop: '1px solid rgba(255,255,255,0.11)',
+        borderBottom: '1px solid rgba(255,255,255,0.11)',
+        padding: '0',
+      }}>
+        {/* Ligne label + séparateurs */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '24px',
+          padding: '22px 64px 0'
+        }}>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.15)' }} />
+          <span style={{
+            fontFamily: "'Montserrat', sans-serif", fontWeight: 600,
+            fontSize: '15px', letterSpacing: '0.38em',
+            color: 'white', textTransform: 'uppercase', whiteSpace: 'nowrap'
+          }}>Ils m'ont fait confiance</span>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.15)' }} />
+        </div>
+
+        {/* Piste de défilement */}
+        <div style={{ position: 'relative', overflow: 'hidden', padding: '20px 0 22px' }}>
+          <div className="clients-track">
+            {doubled.map((logo, i) => (
+              <img
+                key={`${logo.id}-${i}`}
+                src={logo.src}
+                alt={logo.alt}
+                className="client-logo"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+/* ════════════════════════════════════════════ APP ══ */
+function App() {
+  return (
+    <>
+      <Nav />
+      <Hero />
+      <About />
+      <ClientsSlider />
+      <Portfolio />
+      <ImageTrailSection />
+      <Strategie />
+      <Contact />
+      <footer style={{
+        padding: '52px 64px',
+        background: 'var(--ink)', color: 'white', textAlign: 'center'
+      }}>
+        <div style={{
+          fontFamily: "'Montserrat', sans-serif",
+          fontWeight: 900, fontSize: '16px',
+          letterSpacing: '0.28em', textTransform: 'uppercase'
+        }}>Anima Terrae</div>
+        <p style={{ fontSize: '9px', color: 'var(--mist)', marginTop: '10px', letterSpacing: '0.12em' }}>
+          "Donner voix à la terre et à ceux qui la font vivre."
+        </p>
+      </footer>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
