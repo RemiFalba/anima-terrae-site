@@ -6,6 +6,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+
+// Redirection www → non-www
+app.use((req, res, next) => {
+  if (req.headers.host && req.headers.host.startsWith('www.')) {
+    return res.redirect(301, `https://anima-terrae.fr${req.url}`);
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname)));
 
 // ── Route envoi email ──
