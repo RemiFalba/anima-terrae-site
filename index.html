@@ -666,9 +666,10 @@ function Nav() {
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         {[
           { label: 'À propos',    href: '#apropos'      },
-          { label: 'Réalisations', href: '#realisations' },
-          { label: 'Stratégie',   href: '#offre'        },
-          { label: 'Contact',     href: '#contact'      },
+          { label: 'Réalisations', href: '#realisations'  },
+          { label: 'Stratégie',   href: '#offre'         },
+          { label: 'Études de cas', href: '#etudes-de-cas' },
+          { label: 'Contact',     href: '#contact'       },
         ].map(({ label, href }) => (
           <a key={label} href={href} style={{
             padding: '7px 18px',
@@ -1350,7 +1351,7 @@ const CASE_STUDIES = [
 
 function CaseStudies() {
   return (
-    <section style={{
+    <section id="etudes-de-cas" style={{
       padding: '96px 64px',
       background: '#f7f8f6',
       borderTop: '1px solid var(--rule)',
@@ -2558,9 +2559,9 @@ function App() {
       <About />
       <ClientsSlider />
       <Portfolio />
-      <CaseStudies />
       <ImageTrailSection />
       <Strategie />
+      <CaseStudies />
       <Contact />
       <footer style={{
         padding: '52px 64px',
