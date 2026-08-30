@@ -929,10 +929,38 @@ function About() {
 
 
 /* ════════════════════════════════════ PORTFOLIO ══ */
+function getYouTubeId(url) {
+  if (!url) return null;
+  const m = url.match(/youtu\.be\/([^?&]+)/) || url.match(/youtube\.com\/.*[?&]v=([^&]+)/);
+  return m ? m[1] : null;
+}
+
 const PROJECTS = [
   {
-    id: 'bourget',
+    id: 'occiMore',
     num: '01',
+    title: 'Programme OcciMore — Dedienne Santé',
+    location: 'Montpellier — Hérault',
+    description: 'Démontrer la rentabilité et l\'efficacité de l\'éco-conception dans un secteur industriel très réglementé. Une vidéo témoignage principale et trois déclinaisons verticales pour valoriser les bénéfices économiques, environnementaux et humains de la démarche.',
+    tags: ['ÉCO-CONCEPTION', 'INDUSTRIE MÉDICALE', 'TÉMOIGNAGE'],
+    bg: 'linear-gradient(135deg, #041410 0%, #0a2e22 55%, #071c18 100%)',
+    accent: '#4ecba0',
+    videoUrl: 'https://youtu.be/Dbs_q_Psujo',
+  },
+  {
+    id: 'falba',
+    num: '02',
+    title: 'Artisan poseur de moquette de pierre',
+    location: 'Eycheil — Ariège',
+    description: 'Découverte du savoir-faire de Jérôme Falba, artisan spécialisé dans la pose de moquette de pierre en Ariège. De la préparation du support au lissage à la main, immersion dans la métamorphose d\'une terrasse : un revêtement minéral sur-mesure, drainant, antidérapant et conçu pour durer.',
+    tags: ['ARTISAN', 'SUR-MESURE', 'SAVOIR-FAIRE'],
+    bg: 'linear-gradient(135deg, #180e04 0%, #321c08 55%, #241408 100%)',
+    accent: '#d4a46a',
+    videoUrl: 'https://youtu.be/bszBG_K5_3w',
+  },
+  {
+    id: 'bourget',
+    num: '03',
     title: 'Réserve de Biosphère du Lac du Bourget',
     location: 'Aix-les-Bains — Savoie',
     description: 'Valoriser un territoire protégé MAB UNESCO auprès de publics multiples — grand public, partenaires institutionnels, acteurs économiques locaux. Un écosystème vidéo complet pour la Réserve de Biosphère du Lac du Bourget en Savoie.',
@@ -943,7 +971,7 @@ const PROJECTS = [
   },
   {
     id: 'veles',
-    num: '02',
+    num: '04',
     title: 'Veles Énergie',
     location: 'Bordeaux — Occitanie',
     description: 'Film institutionnel et témoignages pour un bureau d\'études spécialisé en agrivoltaïsme. Convaincre des agriculteurs de la transition énergétique sans discours alarmiste — un enjeu de communication sur mesure pour la filière énergie renouvelable.',
@@ -954,7 +982,7 @@ const PROJECTS = [
   },
   {
     id: 'beome',
-    num: '03',
+    num: '05',
     title: 'BeeOme',
     location: 'Lyon',
     description: 'Stratégie narrative et vidéos de lancement pour une formation sur l\'éco-anxiété. Transformer un sujet complexe en message accessible — une production pensée pour les acteurs du développement durable et de l\'accompagnement RSE.',
@@ -965,7 +993,7 @@ const PROJECTS = [
   },
   {
     id: 'murillo',
-    num: '04',
+    num: '06',
     title: 'Vanessa Murillo',
     location: 'Saint-Girons — Ariège',
     description: 'Portrait d\'entreprise sensible sur la reprise d\'une PME familiale en Ariège. De la gestion administrative à la direction de chantiers — l\'affirmation d\'une femme dirigeante dans le BTP.',
@@ -1057,18 +1085,35 @@ function VideoModal({ project, onClose }) {
 
         {/* Video area — 16:9 */}
         <div style={{ position: 'relative', paddingTop: '56.25%', background: '#000' }}>
-          <video
-            controls
-            autoPlay
-            playsInline
-            style={{
-              position: 'absolute', inset: 0,
-              width: '100%', height: '100%',
-              background: '#000',
-            }}
-          >
-            <source src={project.videoUrl} type="video/mp4" />
-          </video>
+          {(() => {
+            const ytId = getYouTubeId(project.videoUrl);
+            if (ytId) {
+              return (
+                <iframe
+                  src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
+                  allow="autoplay; encrypted-media; fullscreen"
+                  allowFullScreen
+                  style={{
+                    position: 'absolute', inset: 0,
+                    width: '100%', height: '100%',
+                    border: 'none',
+                  }}
+                />
+              );
+            }
+            return (
+              <video
+                controls autoPlay playsInline
+                style={{
+                  position: 'absolute', inset: 0,
+                  width: '100%', height: '100%',
+                  background: '#000',
+                }}
+              >
+                <source src={project.videoUrl} type="video/mp4" />
+              </video>
+            );
+          })()}
         </div>
 
         {/* Footer tags */}
@@ -1130,20 +1175,38 @@ function ProjectCard({ project, index, onOpenModal }) {
       }}
     >
       {/* Miniature vidéo vivante */}
-      {project.videoUrl && (
-        <video
-          muted loop playsInline autoPlay preload="metadata"
-          style={{
-            position: 'absolute', inset: 0,
-            width: '100%', height: '100%',
-            objectFit: 'cover',
-            opacity: 0.52,
-            zIndex: 0,
-          }}
-        >
-          <source src={project.videoUrl} type="video/mp4" />
-        </video>
-      )}
+      {project.videoUrl && (() => {
+        const ytId = getYouTubeId(project.videoUrl);
+        if (ytId) {
+          return (
+            <img
+              src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
+              alt={project.title}
+              style={{
+                position: 'absolute', inset: 0,
+                width: '100%', height: '100%',
+                objectFit: 'cover',
+                opacity: 0.52,
+                zIndex: 0,
+              }}
+            />
+          );
+        }
+        return (
+          <video
+            muted loop playsInline autoPlay preload="metadata"
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'cover',
+              opacity: 0.52,
+              zIndex: 0,
+            }}
+          >
+            <source src={project.videoUrl} type="video/mp4" />
+          </video>
+        );
+      })()}
 
       {/* Numéro décoratif */}
       <div style={{
